@@ -5,7 +5,67 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    const handleResponse = async (response) => {
+      // Get reference to content
+      const content = document.querySelector('#content');
 
+      // Display bold text of the status
+      switch (response.status) {
+        case 200:
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 400:
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 401:
+          content.innerHTML = `<b>Unathorized</b>`;
+          break;
+        case 403:
+          content.innerHTML = `<b>Forbidden</b>`;
+          break;
+        case 404: 
+          content.innerHTML = `<b>Data Not Found</b>`;
+          break;
+        case 500:
+          content.innerHTML = `<b>Internal Server Error</b>`;
+          break;
+        case 501:
+          content.innerHTML = `<b>Feature Not Implimented</b>`;
+          break;
+      }
+
+      // Get the data in different ways depending on if its json or xml
+      const contentType = response.headers.get('content-type');
+      if (contentType === 'application/json') { // Its JSON
+        const obj = await response.json();
+        content.innerHTML += `<p>Message: ${obj.message}</p>`;
+      }
+      else if (contentType === 'text/xml') { // Its XML
+        const text = await response.text();
+        let parsedResponse = new window.DOMParser().parseFromString(text, 'text/xml');
+        content.innerHTML += `<p>Message: ${parsedResponse.querySelector("message").textContent}</p>`;
+      }
+    };
+
+    const requestUpdate = async (url, method) => {
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Accept': document.querySelector("#type").value,
+        }
+      });
+      
+      return handleResponse(response);
+    };
+
+    const init = () => {
+      document.querySelector("#send").onclick = () => {
+        const url = document.querySelector("#page").value;
+        requestUpdate(url, 'get');
+      }
+    }
+
+    window.onload = init;
   </script>
 </head>
 <body>
